@@ -1,0 +1,14 @@
+[plan]
+providers = ["nodejs-pnpm"]
+
+[variables]
+NODE_ENV = "production"
+
+[phases.install]
+cmds = ["pnpm install --frozen-lockfile"]
+
+[phases.build]
+cmds = ["pnpm run build"]
+
+[phases.start]
+cmd = "pnpm start:prod"

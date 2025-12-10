@@ -1,0 +1,261 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Payment {
+  id                  String   @id
+  sessionId           String   @unique
+  paymentIntentId     String?  @unique
+  chargeId            String?  @unique
+  status              String
+  paymentStatus       String
+  amountTotal         Int
+  currency            String
+  customerId          String?
+  customerEmail       String?
+  mode                String?
+  clientReferenceId   String?
+  metadata            Json?
+  paymentIntentStatus String?
+  paymentMethodType   String?
+  receiptUrl          String?
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime
+  userId              BigInt?
+  users               users?   @relation(fields: [userId], references: [user_id])
+
+  @@index([userId])
+}
+
+model attendance {
+  attendance_id BigInt    @id @default(autoincrement())
+  date_time     DateTime? @default(now()) @db.Timestamp(6)
+  qr_code_id    BigInt?
+  user_id       BigInt?
+  qr_code       qr_code?  @relation(fields: [qr_code_id], references: [qr_code_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_qr_code_id")
+  users         users?    @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_id")
+}
+
+model game_score {
+  game_score_id BigInt    @id @default(autoincrement())
+  score         Int
+  created_at    DateTime? @default(now()) @db.Timestamp(6)
+  user_id       BigInt?
+  users         users?    @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model item {
+  item_id           BigInt              @id @default(autoincrement())
+  name_item         String?             @db.VarChar(255)
+  units             Int?
+  descript          String?
+  price             Decimal?            @db.Decimal(8, 2)
+  relation_kit_item relation_kit_item[]
+}
+
+model kit {
+  kit_id            BigInt              @id @default(autoincrement())
+  name_kit          String?             @db.VarChar(255)
+  descript          String?
+  price             Decimal?            @db.Decimal(8, 2)
+  relation_kit_item relation_kit_item[]
+  users             users[]
+}
+
+model qr_code {
+  qr_code_id  BigInt       @id @default(autoincrement())
+  created_at  DateTime?    @default(now()) @db.Timestamp(6)
+  token       String?      @db.VarChar(255)
+  workshop_id BigInt?
+  attendance  attendance[]
+  workshop    workshop?    @relation(fields: [workshop_id], references: [workshop_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_workshop_id")
+}
+
+model red_social {
+  red_social_id  BigInt           @id @default(autoincrement())
+  nombre         String?          @db.VarChar(255)
+  descript       String?
+  url_red_social url_red_social[]
+}
+
+model relation_kit_item {
+  relation_id BigInt    @id @default(autoincrement())
+  created_at  DateTime? @default(now()) @db.Timestamp(6)
+  updated_at  DateTime? @default(now()) @db.Timestamp(6)
+  kit_id      BigInt?
+  item_id     BigInt?
+  item        item?     @relation(fields: [item_id], references: [item_id], onDelete: NoAction, onUpdate: NoAction)
+  kit         kit?      @relation(fields: [kit_id], references: [kit_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model schedule {
+  schedule_id     BigInt         @id @default(autoincrement())
+  name_conference String?        @db.VarChar(255)
+  descript        String?
+  day_week        day_week_enum?
+  assigned_date   DateTime?      @db.Date
+  start_time      DateTime?      @db.Time(6)
+  end_time        DateTime?      @db.Time(6)
+  workshop_id     BigInt?
+  speaker_id      BigInt?
+  users           users?         @relation(fields: [speaker_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+  workshop        workshop?      @relation(fields: [workshop_id], references: [workshop_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model speaker_profiles {
+  id_speaker_profile   BigInt  @id @default(autoincrement())
+  name_company         String? @db.VarChar(255)
+  rol_event            String? @db.VarChar(255)
+  rol_company          String? @db.VarChar(255)
+  personal_description String?
+  user_id              BigInt?
+  users                users?  @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model type_user {
+  type_user_id BigInt    @id @default(autoincrement())
+  name_type    String?   @db.VarChar(255)
+  descript     String?
+  created_at   DateTime? @default(now()) @db.Timestamp(6)
+  updated_at   DateTime? @default(now()) @db.Timestamp(6)
+  users        users[]
+}
+
+model url_red_social {
+  url_red_social_id BigInt      @id @default(autoincrement())
+  url               String?     @db.VarChar(355)
+  red_social_id     BigInt?
+  user_id           BigInt?
+  red_social        red_social? @relation(fields: [red_social_id], references: [red_social_id], onDelete: NoAction, onUpdate: NoAction)
+  users             users?      @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model users {
+  user_id                                     BigInt                    @id @default(autoincrement())
+  name_user                                   String?                   @db.VarChar(100)
+  paternal_surname                            String                    @db.VarChar(100)
+  maternal_surname                            String                    @db.VarChar(100)
+  phone                                       String                    @db.VarChar(20)
+  emergency_phone                             String?                   @db.VarChar(20)
+  email                                       String                    @unique(map: "unique_email") @db.VarChar(155)
+  password_user                               String                    @db.VarChar(255)
+  provenance                                  String?                   @db.VarChar(255)
+  educational_program                         String?                   @db.VarChar(155)
+  grade                                       String?                   @db.Char(2)
+  group_user                                  String?                   @db.Char(1)
+  size_user                                   size_enum?
+  kit_id                                      BigInt?
+  workshop_id                                 BigInt?
+  type_user_id                                BigInt?
+  status                                      status_user?              @default(inactive)
+  status_event                                Boolean?                  @default(false)
+  matricula                                   String?                   @db.VarChar(8)
+  is_badge_printed                            Boolean?                  @default(false)
+  Payment                                     Payment[]
+  attendance                                  attendance[]
+  game_score                                  game_score[]
+  movimientos_financieros                     movimientos_financieros[]
+  schedule                                    schedule[]
+  speaker_profiles                            speaker_profiles[]
+  url_red_social                              url_red_social[]
+  type_user                                   type_user?                @relation(fields: [type_user_id], references: [type_user_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_type_user")
+  workshop_users_workshop_idToworkshop        workshop?                 @relation("users_workshop_idToworkshop", fields: [workshop_id], references: [workshop_id], onDelete: Cascade, map: "fk_workshop_id")
+  kit                                         kit?                      @relation(fields: [kit_id], references: [kit_id], onDelete: NoAction, onUpdate: NoAction)
+  verification_token                          verification_token[]
+  workshop_workshop_instructor_user_idTousers workshop[]                @relation("workshop_instructor_user_idTousers")
+}
+
+model verification_token {
+  verification_token_id BigInt    @id @default(autoincrement())
+  token                 String?
+  token_type            String?   @db.VarChar(100)
+  created_at            DateTime? @default(now()) @db.Timestamp(6)
+  expires_at            DateTime? @default(dbgenerated("(now() + '00:10:00'::interval)")) @db.Timestamp(6)
+  used                  Boolean?
+  used_at               DateTime? @db.Timestamp(6)
+  attempts              Int?      @default(0)
+  user_id               BigInt?
+  users                 users?    @relation(fields: [user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+model workshop {
+  workshop_id                              BigInt       @id @default(autoincrement())
+  name_workshop                            String?      @db.VarChar(255)
+  descript                                 String?
+  spots_max                                Int?
+  spots_occupied                           Int?
+  building                                 String?      @db.VarChar(100)
+  classroom                                String?      @db.VarChar(100)
+  created_at                               DateTime?    @default(now()) @db.Timestamp(6)
+  updated_at                               DateTime?    @default(now()) @db.Timestamp(6)
+  status                                   status_enum?
+  instructor_user_id                       BigInt?
+  instructor_name                          String?      @db.VarChar(255)
+  level                                    String?      @db.VarChar(32)
+  tools                                    String[]
+  category                                 String?      @db.VarChar(100)
+  qr_code                                  qr_code[]
+  schedule                                 schedule[]
+  users_users_workshop_idToworkshop        users[]      @relation("users_workshop_idToworkshop")
+  users_workshop_instructor_user_idTousers users?       @relation("workshop_instructor_user_idTousers", fields: [instructor_user_id], references: [user_id], onDelete: NoAction, onUpdate: NoAction, map: "fk_instructor_user_id")
+}
+
+model categoria_movimiento {
+  id_categoria            BigInt                    @id @default(autoincrement())
+  nombre                  String                    @db.VarChar(100)
+  descripcion             String?
+  movimientos_financieros movimientos_financieros[]
+}
+
+/// This table contains check constraints and requires additional setup for migrations. Visit https://pris.ly/d/check-constraints for more info.
+model movimientos_financieros {
+  id_movimiento        BigInt               @id @default(autoincrement())
+  tipo                 String               @db.VarChar(10)
+  fecha                DateTime             @default(now()) @db.Timestamptz(6)
+  monto                Decimal              @db.Decimal(12, 2)
+  descripcion          String?
+  medio_pago           String               @db.VarChar(255)
+  id_usuario           BigInt?
+  creado_en            DateTime             @default(now()) @db.Timestamptz(6)
+  actualizado_en       DateTime             @default(now()) @db.Timestamptz(6)
+  id_categoria         BigInt
+  categoria_movimiento categoria_movimiento @relation(fields: [id_categoria], references: [id_categoria], onDelete: NoAction, onUpdate: NoAction)
+  users                users?               @relation(fields: [id_usuario], references: [user_id], onDelete: NoAction, onUpdate: NoAction)
+}
+
+enum day_week_enum {
+  Lunes
+  Martes
+  Miercoles
+  Jueves
+  Viernes
+  Sabado
+  Domingo
+}
+
+enum size_enum {
+  S
+  M
+  L
+  XL
+  XXL
+  XXXL
+}
+
+enum status_enum {
+  active
+  cancelled
+  completed
+}
+
+enum status_user {
+  active
+  inactive
+  suspended
+  deleted
+}
